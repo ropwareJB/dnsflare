@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: ae2e6fa4f941f9937a0eb70c5a3bcedfcb9bd3463682df1fcfa964ea5e6e420d
+-- hash: 7e9686cdf71d6af962dc9bae2ebb97c6fbd2eb1210a00a7084226ff21e47e5f1
 
 name:           dnsflare
 version:        0.1.0.0
@@ -28,17 +28,22 @@ source-repository head
 library
   exposed-modules:
       Lib
+      SlackHook
   other-modules:
       Paths_dnsflare
   hs-source-dirs:
       src
   build-depends:
-      base >=4.7 && <5
+      aeson
+    , base >=4.7 && <5
     , bytestring
     , dns
     , hourglass
     , iproute
+    , modern-uri
     , network
+    , req
+    , text
   default-language: Haskell2010
 
 executable dnsflare
@@ -49,13 +54,17 @@ executable dnsflare
       app
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      base >=4.7 && <5
+      aeson
+    , base >=4.7 && <5
     , bytestring
     , dns
     , dnsflare
     , hourglass
     , iproute
+    , modern-uri
     , network
+    , req
+    , text
   default-language: Haskell2010
 
 test-suite dnsflare-test
@@ -67,11 +76,15 @@ test-suite dnsflare-test
       test
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      base >=4.7 && <5
+      aeson
+    , base >=4.7 && <5
     , bytestring
     , dns
     , dnsflare
     , hourglass
     , iproute
+    , modern-uri
     , network
+    , req
+    , text
   default-language: Haskell2010

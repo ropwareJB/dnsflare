@@ -26,6 +26,10 @@ dependencies:
 - iproute
 - hourglass
 - dns
+- req
+- aeson
+- modern-uri
+- text
 
 library:
   source-dirs: src
