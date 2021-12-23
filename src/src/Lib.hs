@@ -18,6 +18,7 @@ import qualified Network.DNS.Encode as DNS.Encode
 import qualified Network.DNS.Decode as DNS.Decode
 import Data.IP.Internal
 import qualified SlackHook as Slack
+import           Control.Concurrent.Async (concurrently)
 
 main :: IO ()
 main = do
@@ -26,9 +27,70 @@ main = do
 
 runServer :: String -> IO ()
 runServer slackHook = do
-  runUDPServer Nothing "53" talk
+  void $ concurrently
+    (runUDPServer slackHook)
+    (runTCPServer slackHook)
+
+runTCPServer :: String -> IO a
+runTCPServer slackHook = withSocketsDo $ do
+    addr <- resolve
+    E.bracket (open addr) close loop
   where
-    talk s msg client  = do
+    resolve = do
+        let hints = defaultHints {
+                addrFlags = [AI_PASSIVE]
+              , addrSocketType = Stream
+              }
+        head <$> getAddrInfo (Just hints) Nothing (Just "53")
+    open addr = do
+        sock <- socket (addrFamily addr) (addrSocketType addr) (addrProtocol addr)
+        setSocketOption sock ReuseAddr 1
+        withFdSocket sock $ setCloseOnExecIfNeeded
+        bind sock $ addrAddress addr
+        listen sock 1024
+        return sock
+    loop sock = forever $ do
+        (conn, peer) <- accept sock
+        void $ forkFinally (runTCPServerClientThread slackHook conn peer) (const $ gracefulClose conn 5000)
+
+runTCPServerClientThread :: String -> Socket -> SockAddr -> IO ()
+runTCPServerClientThread slackHook sock clientAddr = forever $ do
+  msg <- DNS.IO.receiveVC sock
+  msgHandler sock msg clientAddr
+  where
+    msgHandler s msg client  = do
+        putStrLn $ show msg
+        mapM_
+          (\q -> do
+            Slack.push slackHook (S8.unpack $ DNS.qname q)
+            DNS.IO.sendVC s
+              (DNS.Encode.encode
+                (DNS.IO.responseA (DNS.identifier $ DNS.header msg) q [])
+              )
+          )
+          (DNS.question msg)
+
+runUDPServer :: String -> IO a
+runUDPServer slackHook = withSocketsDo $ do
+    addr <- resolve
+    E.bracket (open addr) close loop
+  where
+    resolve = do
+        let hints = defaultHints {
+                addrFlags = [AI_PASSIVE]
+              , addrSocketType = Datagram
+              }
+        head <$> getAddrInfo (Just hints) Nothing (Just "53")
+    open addr = do
+        sock <- socket (addrFamily addr) (addrSocketType addr) (addrProtocol addr)
+        setSocketOption sock ReuseAddr 1
+        withFdSocket sock $ setCloseOnExecIfNeeded
+        bind sock $ addrAddress addr
+        return sock
+    loop sock = forever $ do
+        (msg, peer) <- DNS.IO.receiveFrom sock
+        msgHandler sock msg peer
+    msgHandler s msg client  = do
         putStrLn $ show msg
         mapM_
           (\q -> do
@@ -40,49 +102,4 @@ runServer slackHook = do
               client
           )
           (DNS.question msg)
-
--- from the "network-run" package.
-runTCPServer :: Maybe HostName -> ServiceName -> (Socket -> IO a) -> IO a
-runTCPServer mhost port server = withSocketsDo $ do
-    addr <- resolve
-    E.bracket (open addr) close loop
-  where
-    resolve = do
-        let hints = defaultHints {
-                addrFlags = [AI_PASSIVE]
-              , addrSocketType = Stream
-              }
-        head <$> getAddrInfo (Just hints) mhost (Just port)
-    open addr = do
-        sock <- socket (addrFamily addr) (addrSocketType addr) (addrProtocol addr)
-        setSocketOption sock ReuseAddr 1
-        withFdSocket sock $ setCloseOnExecIfNeeded
-        bind sock $ addrAddress addr
-        listen sock 1024
-        return sock
-    loop sock = forever $ do
-        (conn, _peer) <- accept sock
-        void $ forkFinally (server sock) (const $ gracefulClose conn 5000)
-
-
-runUDPServer :: Maybe HostName -> ServiceName -> (Socket -> DNSMessage -> SockAddr -> IO a) -> IO a
-runUDPServer mhost port server = withSocketsDo $ do
-    addr <- resolve
-    E.bracket (open addr) close loop
-  where
-    resolve = do
-        let hints = defaultHints {
-                addrFlags = [AI_PASSIVE]
-              , addrSocketType = Datagram
-              }
-        head <$> getAddrInfo (Just hints) mhost (Just port)
-    open addr = do
-        sock <- socket (addrFamily addr) (addrSocketType addr) (addrProtocol addr)
-        setSocketOption sock ReuseAddr 1
-        withFdSocket sock $ setCloseOnExecIfNeeded
-        bind sock $ addrAddress addr
-        return sock
-    loop sock = forever $ do
-        (msg, peer) <- DNS.IO.receiveFrom sock
-        server sock msg peer
 

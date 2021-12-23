@@ -30,6 +30,7 @@ dependencies:
 - aeson
 - modern-uri
 - text
+- async
 
 library:
   source-dirs: src
