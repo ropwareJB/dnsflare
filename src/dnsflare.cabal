@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: b2e207ff6115587657d45504305aa8dc6a0012c66533d91f16137d62cf41775f
+-- hash: 79b274070949f34fe1e10fc39a0112ad1619c6ee41196376ad0d61d4f27450e1
 
 name:           dnsflare
 version:        0.1.0.0
@@ -28,6 +28,7 @@ source-repository head
 library
   exposed-modules:
       Lib
+      QueryCache
       SlackHook
   other-modules:
       Paths_dnsflare
@@ -45,6 +46,7 @@ library
     , network
     , req
     , text
+    , time
   default-language: Haskell2010
 
 executable dnsflare
@@ -67,6 +69,7 @@ executable dnsflare
     , network
     , req
     , text
+    , time
   default-language: Haskell2010
 
 test-suite dnsflare-test
@@ -90,4 +93,5 @@ test-suite dnsflare-test
     , network
     , req
     , text
+    , time
   default-language: Haskell2010

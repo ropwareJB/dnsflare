@@ -19,20 +19,34 @@ import qualified Network.DNS.Decode as DNS.Decode
 import Data.IP.Internal
 import qualified SlackHook as Slack
 import           Control.Concurrent.Async (concurrently)
+import qualified QueryCache as QC
+
+data Model =
+  Model
+    { qc :: QC.Model
+    , webhook :: String
+    }
+
+init :: IO Model
+init = do
+  webhook <- readFile "config" >>= return . T.unpack . T.strip . T.pack
+  qc <- QC.init
+  return $ Model
+    { qc = qc
+    , webhook = webhook
+    }
 
 main :: IO ()
-main = do
-  slackHook <- readFile "config" >>= return . T.unpack . T.strip . T.pack
-  runServer slackHook
+main = Lib.init >>= runServer
 
-runServer :: String -> IO ()
-runServer slackHook = do
+runServer :: Model -> IO ()
+runServer model = do
   void $ concurrently
-    (runUDPServer slackHook)
-    (runTCPServer slackHook)
+    (runUDPServer model)
+    (runTCPServer model)
 
-runTCPServer :: String -> IO a
-runTCPServer slackHook = withSocketsDo $ do
+runTCPServer :: Model -> IO a
+runTCPServer model = withSocketsDo $ do
     addr <- resolve
     E.bracket (open addr) close loop
   where
@@ -51,10 +65,10 @@ runTCPServer slackHook = withSocketsDo $ do
         return sock
     loop sock = forever $ do
         (conn, peer) <- accept sock
-        void $ forkFinally (runTCPServerClientThread slackHook conn peer) (const $ gracefulClose conn 5000)
+        void $ forkFinally (runTCPServerClientThread model conn peer) (const $ gracefulClose conn 5000)
 
-runTCPServerClientThread :: String -> Socket -> SockAddr -> IO ()
-runTCPServerClientThread slackHook sock clientAddr = forever $ do
+runTCPServerClientThread :: Model -> Socket -> SockAddr -> IO ()
+runTCPServerClientThread model sock clientAddr = forever $ do
   msg <- DNS.IO.receiveVC sock
   msgHandler sock msg clientAddr
   where
@@ -62,7 +76,9 @@ runTCPServerClientThread slackHook sock clientAddr = forever $ do
         putStrLn $ show msg
         mapM_
           (\q -> do
-            Slack.push slackHook (S8.unpack $ DNS.qname q)
+            let
+              domain = S8.unpack $ DNS.qname q
+            doIfNotInCache model domain $ Slack.push (webhook model) domain
             DNS.IO.sendVC s
               (DNS.Encode.encode
                 (DNS.IO.responseA (DNS.identifier $ DNS.header msg) q [])
@@ -70,8 +86,8 @@ runTCPServerClientThread slackHook sock clientAddr = forever $ do
           )
           (DNS.question msg)
 
-runUDPServer :: String -> IO a
-runUDPServer slackHook = withSocketsDo $ do
+runUDPServer :: Model -> IO a
+runUDPServer model = withSocketsDo $ do
     addr <- resolve
     E.bracket (open addr) close loop
   where
@@ -94,7 +110,9 @@ runUDPServer slackHook = withSocketsDo $ do
         putStrLn $ show msg
         mapM_
           (\q -> do
-            Slack.push slackHook (S8.unpack $ DNS.qname q)
+            let
+              domain = S8.unpack $ DNS.qname q
+            doIfNotInCache model domain $ Slack.push (webhook model) domain
             DNS.IO.sendTo s
               (DNS.Encode.encode
                 (DNS.IO.responseA (DNS.identifier $ DNS.header msg) q [])
@@ -103,3 +121,13 @@ runUDPServer slackHook = withSocketsDo $ do
           )
           (DNS.question msg)
 
+
+doIfNotInCache :: Model -> String -> IO() -> IO()
+doIfNotInCache model domain io = do
+  found <- QC.find (qc model) domain
+  case found of
+    Nothing -> do
+      QC.addDomainToCache (qc model) domain
+      io
+    Just _ ->
+      return ()

@@ -31,6 +31,7 @@ dependencies:
 - modern-uri
 - text
 - async
+- time
 
 library:
   source-dirs: src

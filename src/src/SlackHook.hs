@@ -12,7 +12,7 @@ push :: String -> String -> IO ()
 push hookUri domain = do
   let payload =
         object
-          [ "text" .= ("RECVD `" ++ domain ++ "`" :: String)
+          [ "text" .= ("`" ++ domain ++ "`" :: String)
           , "username" .= ("DNS Flare" :: String)
           ]
   uri <- mkURI $ Data.Text.pack hookUri
