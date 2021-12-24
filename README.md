@@ -24,6 +24,7 @@ example.com.		21600	IN	NS	ns2.example.com.
 ```
 
 #### Compiling
+Requires Haskell Stack.
 ```
 make bin
 ```
