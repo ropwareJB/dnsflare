@@ -10,6 +10,7 @@ Create a file `config` which contains a single line representing a HTTPS endpoin
 ```
 > cat config
 https://hooks.slack.com/services/xxxxxxxxxxx/xxxxxxxxxxx/xxxxxxxxxxxxxxxxxxxxxxxx
+> sudo ./dnsflare
 ```
 
 Run the service on at least two internet-routable hosts. Then, configure your DNS records to point to your two new nameservers.
@@ -38,3 +39,20 @@ The webhook notification will take each domain from the DNS query and produce a 
   "username" :  "DNS Flare"
 }
 ```
+
+#### Help
+```
+> ./dnsflare --help
+
+v0.1.0, 2021 ROPWARE, Joshua Brown
+
+dnsflare [OPTIONS]
+  DNS Flare
+
+Common flags:
+  -c --cache-length=INT
+  -? --help              Display help message
+  -V --version           Print version information
+```
+
+By default, the cache length is 10. You can change it with the `-c` CLI arg.
