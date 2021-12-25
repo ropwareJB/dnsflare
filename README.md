@@ -3,7 +3,7 @@
 A simple DNS service that relays queries to a webhook for notifications to assist detection of OOB or pseudo-blind vulnerabilities during penetration testing activities.
 
 #### Note
-To reduce notification noise, as DNS clients will often query for both IPv4 and IPv6, queries will be cached and only unique queries will receive the webhook notification. Currently the limit is hardcoded at 10. So you must send 10 additional unique requests before a given request for a particular domain will produce another webhook.
+To reduce notification noise, as DNS clients will often query for both IPv4 and IPv6, queries will be cached and only unique queries will receive the webhook notification. The limit defaults to 10. So you must send 10 additional unique requests before a given request for a particular domain will produce another webhook. See the Help section to configure this setting.
 
 #### Usage
 Create a file `config` which contains a single line representing a HTTPS endpoint to POST received queries to.
