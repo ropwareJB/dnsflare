@@ -32,6 +32,7 @@ dependencies:
 - text
 - async
 - time
+- cmdargs
 
 library:
   source-dirs: src

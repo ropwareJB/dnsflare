@@ -20,6 +20,7 @@ import Data.IP.Internal
 import qualified SlackHook as Slack
 import           Control.Concurrent.Async (concurrently)
 import qualified QueryCache as QC
+import           Args
 
 data Model =
   Model
@@ -27,26 +28,27 @@ data Model =
     , webhook :: String
     }
 
-init :: IO Model
-init = do
+init :: Args -> IO Model
+init args = do
   webhook <- readFile "config" >>= return . T.unpack . T.strip . T.pack
-  qc <- QC.init
+  qc <- QC.init $ cache_length args
   return $ Model
     { qc = qc
     , webhook = webhook
     }
 
-main :: IO ()
-main = Lib.init >>= runServer
+main :: Args -> IO ()
+main args@(ArgsServer {}) =
+  Lib.init args >>= runServer args
 
-runServer :: Model -> IO ()
-runServer model = do
+runServer :: Args -> Model -> IO ()
+runServer args model = do
   void $ concurrently
-    (runUDPServer model)
-    (runTCPServer model)
+    (runUDPServer args model)
+    (runTCPServer args model)
 
-runTCPServer :: Model -> IO a
-runTCPServer model = withSocketsDo $ do
+runTCPServer :: Args -> Model -> IO a
+runTCPServer args model = withSocketsDo $ do
     addr <- resolve
     E.bracket (open addr) close loop
   where
@@ -65,10 +67,10 @@ runTCPServer model = withSocketsDo $ do
         return sock
     loop sock = forever $ do
         (conn, peer) <- accept sock
-        void $ forkFinally (runTCPServerClientThread model conn peer) (const $ gracefulClose conn 5000)
+        void $ forkFinally (runTCPServerClientThread args model conn peer) (const $ gracefulClose conn 5000)
 
-runTCPServerClientThread :: Model -> Socket -> SockAddr -> IO ()
-runTCPServerClientThread model sock clientAddr = forever $ do
+runTCPServerClientThread :: Args -> Model -> Socket -> SockAddr -> IO ()
+runTCPServerClientThread args model sock clientAddr = forever $ do
   msg <- DNS.IO.receiveVC sock
   msgHandler sock msg clientAddr
   where
@@ -86,8 +88,8 @@ runTCPServerClientThread model sock clientAddr = forever $ do
           )
           (DNS.question msg)
 
-runUDPServer :: Model -> IO a
-runUDPServer model = withSocketsDo $ do
+runUDPServer :: Args -> Model -> IO a
+runUDPServer args model = withSocketsDo $ do
     addr <- resolve
     E.bracket (open addr) close loop
   where

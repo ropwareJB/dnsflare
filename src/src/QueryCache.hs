@@ -6,10 +6,12 @@ import Data.List
 import Data.Time
 import Data.Time.Clock.POSIX
 import Control.Concurrent.MVar
+import Args
 
 data Model =
   Model
     { cache :: MVar [QueryStamp]
+    , cache_length :: Int
     }
 
 data QueryStamp =
@@ -19,10 +21,13 @@ data QueryStamp =
     }
     deriving (Show)
 
-init :: IO Model
-init = do
+init :: Int -> IO Model
+init cache_length = do
   cache <- newMVar []
-  return $ Model { cache = cache }
+  return $ Model
+    { cache = cache
+    , QueryCache.cache_length = cache_length
+    }
 
 mintStamp :: String -> IO QueryStamp
 mintStamp q = do
@@ -39,5 +44,5 @@ addDomainToCache model d = do
   stamp <- mintStamp d
   let cache_mvar = cache model
   cache_val <- takeMVar $ cache_mvar
-  putMVar cache_mvar $ take 10 $ stamp:cache_val
+  putMVar cache_mvar $ take (QueryCache.cache_length model) $ stamp:cache_val
 

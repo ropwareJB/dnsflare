@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 25acf7d1b151c57b54f0008dfbbbbc139bce3e350cd199642b2248799e99e306
+-- hash: 447a3d26ad530a3de7cfe18c3c000b6fb5db2432744d35bd24b99f1244149b24
 
 name:           dnsflare
 version:        0.1.0.0
@@ -27,6 +27,7 @@ source-repository head
 
 library
   exposed-modules:
+      Args
       Lib
       QueryCache
       SlackHook
@@ -39,6 +40,7 @@ library
     , async
     , base >=4.7 && <5
     , bytestring
+    , cmdargs
     , dns
     , hourglass
     , iproute
@@ -61,6 +63,7 @@ executable dnsflare
     , async
     , base >=4.7 && <5
     , bytestring
+    , cmdargs
     , dns
     , dnsflare
     , hourglass
@@ -85,6 +88,7 @@ test-suite dnsflare-test
     , async
     , base >=4.7 && <5
     , bytestring
+    , cmdargs
     , dns
     , dnsflare
     , hourglass
