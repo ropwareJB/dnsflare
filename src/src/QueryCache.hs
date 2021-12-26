@@ -1,11 +1,16 @@
 module QueryCache
-  (addDomainToCache, QueryCache.init, Model, QueryCache.find)
+  ( addDomainToCache
+  , QueryCache.init
+  , Model
+  , QueryCache.find
+  )
   where
 
 import Data.List
 import Data.Time
 import Data.Time.Clock.POSIX
 import Control.Concurrent.MVar
+
 import Args
 
 data Model =

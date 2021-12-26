@@ -45,6 +45,10 @@ executables:
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
+    - -static
+      # - -optl-static
+      # cc-options: -static
+      # ld-options: -static -pthread
     dependencies:
     - dnsflare
 

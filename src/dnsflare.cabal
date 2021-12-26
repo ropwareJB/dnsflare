@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 447a3d26ad530a3de7cfe18c3c000b6fb5db2432744d35bd24b99f1244149b24
+-- hash: f681763a11adf1a61b498ad1a34884f25ab0e675eebcee1dced0013ea71d194f
 
 name:           dnsflare
 version:        0.1.0.0
@@ -57,7 +57,7 @@ executable dnsflare
       Paths_dnsflare
   hs-source-dirs:
       app
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -static
   build-depends:
       aeson
     , async

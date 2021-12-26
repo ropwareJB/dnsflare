@@ -20,6 +20,7 @@ import Data.IP.Internal
 import qualified SlackHook as Slack
 import           Control.Concurrent.Async (concurrently)
 import qualified QueryCache as QC
+import qualified System.IO
 import           Args
 
 data Model =

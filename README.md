@@ -24,6 +24,13 @@ example.com.		21600	IN	NS	ns2.example.com.
 ...
 ```
 
+#### Docker
+Build the docker container with the make command, then you can run the docker container forwarding your host UDP and TCP port 53 to the container. Share a webhook config file with a mount:
+```
+> make docker
+> sudo docker run -p 53:53/tcp -p 53:53/udp -v $(pwd)/config:/app/config dnsflare
+```
+
 #### Compiling
 Requires Haskell Stack.
 ```
