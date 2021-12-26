@@ -8,7 +8,6 @@ import Control.Monad (unless, forever, void)
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Char8 as S8
 import           Data.ByteString (ByteString)
-import qualified Data.Text as T
 import Network.Socket
 import Network.Socket.ByteString (recv, sendAll)
 import qualified Network.DNS.IO as DNS.IO
@@ -26,12 +25,12 @@ import           Args
 data Model =
   Model
     { qc :: QC.Model
-    , webhook :: String
+    , webhook :: Slack.Model
     }
 
 init :: Args -> IO Model
 init args = do
-  webhook <- readFile "config" >>= return . T.unpack . T.strip . T.pack
+  webhook <- Slack.init args
   qc <- QC.init $ cache_length args
   return $ Model
     { qc = qc

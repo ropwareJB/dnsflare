@@ -8,6 +8,7 @@ runDns :: Args
 runDns =
   ArgsServer
     { cache_length = 10
+    , monitor_domain = Nothing
     } &= name "dns"
 
 mode :: Mode (CmdArgs Args)

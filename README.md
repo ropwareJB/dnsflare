@@ -10,7 +10,7 @@ Create a file `config` which contains a single line representing a HTTPS endpoin
 ```
 > cat config
 https://hooks.slack.com/services/xxxxxxxxxxx/xxxxxxxxxxx/xxxxxxxxxxxxxxxxxxxxxxxx
-> sudo ./dnsflare
+> sudo ./dnsflare --monitor-domain=example.com
 ```
 
 Run the service on at least two internet-routable hosts. Then, configure your DNS records to point to your two new nameservers.
@@ -57,9 +57,10 @@ dnsflare [OPTIONS]
   DNS Flare
 
 Common flags:
-  -c --cache-length=INT
-  -? --help              Display help message
-  -V --version           Print version information
+  -c --cache-length=INT   
+  -m --monitor-domain=ITEM
+  -? --help                 Display help message
+  -V --version              Print version information
 ```
 
 By default, the cache length is 10. You can change it with the `-c` CLI arg.
