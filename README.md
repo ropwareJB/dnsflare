@@ -81,7 +81,9 @@ Grab your Vultr API key and export it as an environment variable, then run the t
 > ./deploy.sh
 ```
 
-Then set your DNS nameservers to the following IPs:
+Then set your DNS nameservers to the IPs returned by terraform output:
 ```
-terraform output -state=terraform/terraform.tfstate
+> terraform output -state=terraform/terraform.tfstate
+ns1_ip_addr = "111.111.111.11"
+ns2_ip_addr = "22.22.22.222"
 ```
