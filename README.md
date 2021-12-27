@@ -31,7 +31,7 @@ Build the docker container with the make command, then you can run the docker co
 > sudo docker run -p 53:53/tcp -p 53:53/udp -v $(pwd)/config:/app/config dnsflare
 ```
 
-There is also a Dockerhub image available at [cortisol/dnsflare](https://hub.docker.com/repository/docker/cortisol/dnsflare/general).
+There is also a Dockerhub image available at [cortisol/dnsflare](https://hub.docker.com/r/cortisol/dnsflare).
 ```
 > sudo docker run -p 53:53/tcp -p 53:53/udp -v $(pwd)/config:/app/config cortisol/dnsflare
 ```
