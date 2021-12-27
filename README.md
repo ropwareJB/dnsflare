@@ -64,3 +64,24 @@ Common flags:
 ```
 
 By default, the cache length is 10. You can change it with the `-c` CLI arg.
+
+#### Deploying with Terraform
+Add your webhook URL to a config file in the root directory of the repo:
+```
+> ls
+bin  config  deploy.sh  docker  LICENSE  makefile  README.md  src  terraform
+```
+
+Grab your Vultr API key and export it as an environment variable, then run the terraform plan and the deployment script:
+```
+> export VULTR_API_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+> cd terraform
+> terraform apply
+> cd ..
+> ./deploy.sh
+```
+
+Then set your DNS nameservers to the following IPs:
+```
+terraform output -state=terraform/terraform.tfstate
+```

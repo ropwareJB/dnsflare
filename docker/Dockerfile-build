@@ -1,5 +1,9 @@
-FROM debian:9
-
-RUN apt-get update && apt-get install -y curl
-RUN curl -sSL https://get.haskellstack.org/ | sh
-
+FROM debian:11-slim AS builder
+RUN ( \
+	apt-get update && apt-get install -y libgmp10 libc6 curl && \
+	curl -sSL https://get.haskellstack.org/ | sh && \
+	mkdir /app && mkdir /app/bin \
+)
+COPY src /app/src
+COPY makefile /app/
+RUN (cd /app && make bin)
