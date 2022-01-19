@@ -9,9 +9,21 @@ function deploy() {
 		ufw allow 53/tcp
 	}"
 
+
+	# Stop any existing service while we update
+	ssh -f root@$IP "sh -c '{
+		systemctl stop dnsflare
+	}'"
+
 	scp config root@$IP:~/
+	scp dnsflare.service root@$IP:/etc/systemd/system/dnsflare.service
 	scp bin/dnsflare-debian root@$IP:~/dnsflare
-	ssh -f root@$IP "sh -c 'nohup ./dnsflare &> /dev/null &'"
+	ssh -f root@$IP "sh -c '{
+		ln -s /root/dnsflare /usr/bin/dnsflare
+		systemctl daemon-reload
+		systemctl start dnsflare
+		systemctl enable dnsflare
+	}'"
 }
 
 deploy $(terraform output -state=terraform/terraform.tfstate -raw ns1_ip_addr)
