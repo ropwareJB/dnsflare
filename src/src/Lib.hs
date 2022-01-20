@@ -4,6 +4,7 @@ module Lib
 
 import Control.Concurrent (forkFinally)
 import qualified Control.Exception as E
+import           Control.Exception (SomeException, try)
 import Control.Monad (unless, forever, void)
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Char8 as S8
@@ -14,7 +15,6 @@ import qualified Network.DNS.IO as DNS.IO
 import qualified Network.DNS.Types as DNS
 import           Network.DNS.Types (DNSMessage)
 import qualified Network.DNS.Encode as DNS.Encode
-import qualified Network.DNS.Decode as DNS.Decode
 import Data.IP.Internal
 import qualified SlackHook as Slack
 import           Control.Concurrent.Async (concurrently)
@@ -71,10 +71,14 @@ runTCPServer args model = withSocketsDo $ do
 
 runTCPServerClientThread :: Args -> Model -> Socket -> SockAddr -> IO ()
 runTCPServerClientThread args model sock clientAddr = forever $ do
-  msg <- DNS.IO.receiveVC sock
-  msgHandler sock msg clientAddr
+  try_msg <- try (DNS.IO.receiveVC sock) :: IO (Either SomeException DNSMessage)
+  case try_msg of
+    Left ex ->
+      putStrLn $ "Caught exception: " ++ show ex
+    Right msg ->
+      msgHandler sock msg clientAddr
   where
-    msgHandler s msg client  = do
+    msgHandler s msg client = do
         putStrLn $ show msg
         mapM_
           (\q -> do
@@ -106,8 +110,12 @@ runUDPServer args model = withSocketsDo $ do
         bind sock $ addrAddress addr
         return sock
     loop sock = forever $ do
-        (msg, peer) <- DNS.IO.receiveFrom sock
-        msgHandler sock msg peer
+        try_msg <- try (DNS.IO.receiveFrom sock) :: IO (Either SomeException (DNSMessage, SockAddr))
+        case try_msg of
+          Left ex ->
+            putStrLn $ "Caught exception: " ++ show ex
+          Right (msg, peer) ->
+            msgHandler sock msg peer
     msgHandler s msg client  = do
         putStrLn $ show msg
         mapM_
