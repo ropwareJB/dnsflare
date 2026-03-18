@@ -1,0 +1,8 @@
+stages:
+  - automation
+
+include:
+  - component: $CI_SERVER_FQDN/ropware/ropware-ci/default@main
+    inputs:
+      stage: automation
+

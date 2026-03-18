@@ -5,6 +5,10 @@
 
   outputs = { self, dnsflare-src }: {
     packages = dnsflare-src.packages;
+
+    hydraJobs = {
+      inherit (self) packages;
+    };
   };
 
   nixConfig = {
